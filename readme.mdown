@@ -1,0 +1,28 @@
+````
+░█▀█░█▄█░█▀█░█▀▀░█▀▄░█▀█░█▀▀░█▀▀░█▀▄░█░█░█▀▀░█▀▄
+░█▀█░█░█░█░█░█▀▀░█▀▄░█▀█░▀▀█░█▀▀░█▀▄░▀▄▀░█▀▀░█▀▄
+░▀░▀░▀░▀░▀▀▀░▀▀▀░▀▀░░▀░▀░▀▀▀░▀▀▀░▀░▀░░▀░░▀▀▀░▀░▀
+````
+### Ad-hoc sqlite server that can be previewed in the browser
+
+#### Features
+- Define columns runtime
+- Export to file
+- Export to csv
+- Pretty print preview in browser
+
+#### How-to
+
+  Initialize a new table (all columns are ``varchar``) 
+  * ``/init/col_1,col_2,...``
+
+  Insert data:
+  * ``/insert/A_string,"12.2"...``
+
+  View:
+  * ``/``
+
+  Export:
+  * ``/download`` (sqlite file to hard disk)
+  * ``/csv`` (csv string in browser)
+

@@ -1,0 +1,17 @@
+{% extends "layout.html" %}
+{% block content %}
+<table class="pure-table">
+  <thead>
+	  {% for e in headings %}
+      <td>{{e}}</td>
+	  {% endfor %}
+    </thead>
+	{% for line in items %}
+    <tr>
+		{% for e in line %}
+        <td>{{e}}</td>
+		{% endfor %}
+    </tr>
+{% endfor %}
+</table>
+{% endblock %}
