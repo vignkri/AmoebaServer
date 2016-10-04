@@ -8,10 +8,18 @@ __version__ = "0.1"
 __license__ = "wtfpl"
 
 import logging, sqlite3, csv, io
-from io import StringIO
 from bottle import static_file, response,route, run, route, jinja2_template as template
+from io import StringIO
+from pathlib import Path
+from shutil import copyfile
 
-db = sqlite3.connect(":memory:")
+
+# Check if file exists, if not, bootstrap it from the sample
+db_file = Path("db.sqlite")
+if not db_file.is_file():
+    copyfile("db.sqlite.sample", "db.sqlite")
+
+db = sqlite3.connect("db.sqlite")
 
 #Renders the table
 @route('/')
