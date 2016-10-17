@@ -2,17 +2,19 @@
 # -*- coding: utf-8 -*-
 """[application description here]"""
 
-__appname__ = "AmoebaServer"
-__author__  = "Antoni Kaniowski"
-__version__ = "0.1"
-__license__ = "wtfpl"
 
-import logging, sqlite3, csv, io
-from bottle import static_file, response,route, run, route, jinja2_template as template
-from io import StringIO
+import io
+import csv
+import sqlite3
 from pathlib import Path
 from shutil import copyfile
+from bottle import response, route, run
+from bottle import jinja2_template as template
 
+__appname__ = "AmoebaServer"
+__author__ = "Antoni Kaniowski"
+__version__ = "0.1"
+__license__ = "wtfpl"
 
 # Check if file exists, if not, bootstrap it from the sample
 db_file = Path("db.sqlite")
@@ -21,27 +23,30 @@ if not db_file.is_file():
 
 db = sqlite3.connect("db.sqlite")
 
-#Renders the table
+
+# Renders the table
 @route('/')
 def print_items():
     cursor = db.execute('SELECT * FROM t1')
     # FIXME handle no database case with grace
     return template('table.html',
-            headings = list(map(lambda x: x[0], cursor.description)),
-            items=cursor.fetchall())
+                    headings=list(map(lambda x: x[0], cursor.description)),
+                    items=cursor.fetchall())
 
-#Sends the sqlite file
+
+# Sends the sqlite file
 @route('/download')
 def get_sqlite():
-    response.headers['Content-Disposition'] = 'attachment; filename="database.sqlite"'
-    buffer = StringIO()
+    response.headers['Content-Disposition'] = \
+        'attachment; filename="database.sqlite"'
+    buffer = io.StringIO()
     for line in db.iterdump():
         buffer.write('%s\n' % line)
 
     return buffer.getvalue()
 
 
-#Sends the csv of the db
+# Sends the csv of the db
 @route('/csv')
 def get_csv():
     cursor = db.execute('SELECT * FROM t1')
@@ -52,15 +57,16 @@ def get_csv():
     writer.writerow(header)
     for line in csvdata:
         writer.writerow(line)
+    # --
+    return template('<pre>{{o}}</pre>', o=output.getvalue())
 
-    return template('<pre>{{o}}</pre>', o = output.getvalue())
 
-#Creates a new table
+# Creates a new table
 @route('/insert/<rows>')
 def insert(rows):
     reader_list = csv.DictReader(io.StringIO(rows))
     header = reader_list.fieldnames
-    h = ",".join("\'"+str(x)+"\'" for x in header);
+    h = ",".join("\'"+str(x)+"\'" for x in header)
     statement = 'INSERT INTO t1 VALUES({h})'.format(h=h)
     print(statement)
 
@@ -68,6 +74,7 @@ def insert(rows):
     db.commit()
 
     return "Ran: \r" + statement
+
 
 # Creates a new table
 @route('/init/<rows>')
