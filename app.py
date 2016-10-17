@@ -96,4 +96,4 @@ def init(rows):
 
     return "Ran: \r" + statement
 
-run(host='localhost', port=8888)
+run(host='0.0.0.0', port=8888)
