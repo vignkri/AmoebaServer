@@ -81,16 +81,17 @@ def insert(rows):
 def init(rows):
     reader_list = csv.DictReader(io.StringIO(rows))
     header = reader_list.fieldnames
-    h = " varchar, ".join(str(x) for x in header)
-    statement = 'CREATE TABLE t1 ({h} varchar)'.format(h=h)
-    print(statement)
 
     try:
+        h = " varchar, ".join(str(x) for x in header)
+        statement = 'CREATE TABLE t1 ({h} varchar)'.format(h=h)
+        print(statement)
         db.execute('DROP TABLE IF EXISTS t1')
         db.execute(statement)
         db.commit()
-    except sqlite3.OperationalError as e:
-        # TODO catch operational exception for sqlite3
+    except sqlite3.OperationalError:
+        # TODO Try to switch keywords with non-keywords
+        print("Check your init statement. Keywords are not allowed.")
         raise
 
     return "Ran: \r" + statement
