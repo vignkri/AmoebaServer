@@ -67,6 +67,7 @@ def insert(rows):
     reader_list = csv.DictReader(io.StringIO(rows))
     header = reader_list.fieldnames
     h = ",".join("\'"+str(x)+"\'" for x in header)
+    print(h)
     statement = 'INSERT INTO t1 VALUES({h})'.format(h=h)
     print(statement)
 
@@ -74,6 +75,21 @@ def insert(rows):
     db.commit()
 
     return "Ran: \r" + statement
+
+
+# Insert bulk rows
+@route('/bulkinsert/<rows>')
+def binsert(rows):
+    print(rows)
+    reg_stmnt = '(?:[^,(]|\([^)]*\))+)'
+    data = rows.rstrip(")").lstrip("(").split("),(")
+    print(data)
+    for item in data:
+        statement = '''INSERT INTO t1 VALUES ({h})'''.format(h=item)
+        print(statement)
+        db.execute(statement)
+    db.commit()
+    return "Ran: \r" + data
 
 
 # Creates a new table
