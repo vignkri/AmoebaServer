@@ -3,6 +3,7 @@
 """[application description here]"""
 
 
+import re
 import io
 import csv
 import sqlite3
@@ -81,15 +82,16 @@ def insert(rows):
 @route('/bulkinsert/<rows>')
 def binsert(rows):
     print(rows)
-    reg_stmnt = '(?:[^,(]|\([^)]*\))+)'
-    data = rows.rstrip(")").lstrip("(").split("),(")
+    reg = re.compile('(?:[^,(]|\([^)]*\))*')
+    data = reg.findall(rows)
     print(data)
+    # --
     for item in data:
-        statement = '''INSERT INTO t1 VALUES ({h})'''.format(h=item)
-        print(statement)
+        statement = '''INSERT INTO t1 VALUES({h})'''.format(h=item)
         db.execute(statement)
+    # --
     db.commit()
-    return "Ran: \r" + data
+    return data
 
 
 # Creates a new table
