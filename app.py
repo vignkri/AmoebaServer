@@ -62,26 +62,7 @@ def get_csv():
     return template('<pre>{{o}}</pre>', o=output.getvalue())
 
 
-# Creates a new table
-@route('/insert/<rows>')
-def insert(rows):
-    reader_list = csv.DictReader(io.StringIO(rows))
-    print(reader_list)
-    header = reader_list.fieldnames
-    print(type(header))
-    h = ",".join("\'"+str(x)+"\'" for x in header)
-    print(h)
-    statement = 'INSERT INTO t1 VALUES({h})'.format(h=h)
-    print(statement)
-
-    db.execute(statement)
-    db.commit()
-
-    return "Ran: \r" + statement
-
-
 # Insert bulk rows
-@route('/bulkinsert/<rows>')
 def binsert(rows):
     reg = re.compile('(?:[^,(]|\([^)]*\))*')
     data = [item.rstrip(")").lstrip("(").split(", ")
@@ -95,7 +76,23 @@ def binsert(rows):
     except:
         # TODO Try to catch the exception
         raise
-    return "Successfully input %s" % rows
+    return "Successfully inserted %s" % rows
+
+
+@route('/insert/<rows>')
+def insert(rows):
+    # TODO Fix both imports to reuse parts so that bulk and simple are same
+    if rows.startswith("("):
+        binsert(rows)
+        return binsert(rows)
+    else:
+        reader_list = csv.DictReader(io.StringIO(rows))
+        header = reader_list.fieldnames
+        h = ",".join("\'"+str(x)+"\'" for x in header)
+        statement = 'INSERT INTO t1 VALUES({h})'.format(h=h)
+        db.execute(statement)
+        db.commit()
+        return "Successfully inserted: \r" + statement
 
 
 # Creates a new table
