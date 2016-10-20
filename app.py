@@ -66,7 +66,9 @@ def get_csv():
 @route('/insert/<rows>')
 def insert(rows):
     reader_list = csv.DictReader(io.StringIO(rows))
+    print(reader_list)
     header = reader_list.fieldnames
+    print(type(header))
     h = ",".join("\'"+str(x)+"\'" for x in header)
     print(h)
     statement = 'INSERT INTO t1 VALUES({h})'.format(h=h)
@@ -87,8 +89,12 @@ def binsert(rows):
     print(data)
     # --
     for item in data:
-        statement = '''INSERT INTO t1 VALUES({h})'''.format(h=item)
-        db.execute(statement)
+        if len(item) > 1:
+            test = tuple("\'" + str(x) + "\'" for x in item)
+            print(test)
+            statement = "INSERT INTO t1 VALUES %s" % item
+            print(statement)
+            db.execute(statement)
     # --
     db.commit()
     return data
