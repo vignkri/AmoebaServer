@@ -83,21 +83,19 @@ def insert(rows):
 # Insert bulk rows
 @route('/bulkinsert/<rows>')
 def binsert(rows):
-    print(rows)
     reg = re.compile('(?:[^,(]|\([^)]*\))*')
-    data = reg.findall(rows)
-    print(data)
+    data = [item.rstrip(")").lstrip("(").split(", ")
+            for item in reg.findall(rows)]
+    dta = [tuple(item) for item in data if len(item) > 1]
+    # TODO Fix the import so that it is quite fast
     # --
-    for item in data:
-        if len(item) > 1:
-            test = tuple("\'" + str(x) + "\'" for x in item)
-            print(test)
-            statement = "INSERT INTO t1 VALUES %s" % item
-            print(statement)
-            db.execute(statement)
-    # --
-    db.commit()
-    return data
+    try:
+        db.executemany("INSERT INTO t1 VALUES (?, ?)", dta)
+        db.commit()
+    except:
+        # TODO Try to catch the exception
+        raise
+    return "Successfully input %s" % rows
 
 
 # Creates a new table
