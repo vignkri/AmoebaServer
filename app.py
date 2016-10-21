@@ -17,6 +17,8 @@ __author__ = "Antoni Kaniowski"
 __version__ = "0.1"
 __license__ = "wtfpl"
 
+# Store number of rows just to handle properly
+no_rows = None
 # Check if file exists, if not, bootstrap it from the sample
 db_file = Path("db.sqlite")
 if not db_file.is_file():
@@ -30,6 +32,7 @@ db = sqlite3.connect("db.sqlite")
 def print_items():
     cursor = db.execute('SELECT * FROM t1')
     # FIXME handle no database case with grace
+    # FIXME Set number of rows to be x
     return template('table.html',
                     headings=list(map(lambda x: x[0], cursor.description)),
                     items=cursor.fetchall())
@@ -71,6 +74,7 @@ def binsert(rows):
     # TODO Fix the import so that it is quite fast
     # --
     try:
+        # TODO FIXME execute many for multiple values for multiple columns
         db.executemany("INSERT INTO t1 VALUES (?, ?)", dta)
         db.commit()
     except:
@@ -98,9 +102,10 @@ def insert(rows):
 # Creates a new table
 @route('/init/<rows>')
 def init(rows):
+    global no_rows
     reader_list = csv.DictReader(io.StringIO(rows))
     header = reader_list.fieldnames
-
+    no_rows = len(header)
     try:
         h = " varchar, ".join(str(x) for x in header)
         statement = 'CREATE TABLE t1 ({h} varchar)'.format(h=h)
