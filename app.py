@@ -34,6 +34,7 @@ db = sqlite3.connect("db.sqlite")
 # Renders the table
 @route('/')
 def print_items():
+    """Print the data in the database in a tabular form"""
     cursor = db.execute('SELECT * FROM t1')
     # FIXME handle no database case with grace
     # FIXME Set number of rows to be x
@@ -45,6 +46,7 @@ def print_items():
 # Sends the sqlite file
 @route('/download')
 def get_sqlite():
+    """Get the sqlite file and download it"""
     response.headers['Content-Disposition'] = \
         'attachment; filename="database.sqlite"'
     buffer = io.StringIO()
@@ -57,6 +59,7 @@ def get_sqlite():
 # Sends the csv of the db
 @route('/csv')
 def get_csv():
+    """Get the csv file from the database"""
     cursor = db.execute('SELECT * FROM t1')
     header = list(map(lambda x: x[0], cursor.description))
     csvdata = cursor.fetchall()
@@ -69,17 +72,27 @@ def get_csv():
     return template('<pre>{{o}}</pre>', o=output.getvalue())
 
 
-def get_first():
+def get_one():
+    """Get one row of the database"""
     cursor = db.execute("SELECT * FROM t1 LIMIT 1")
     return cursor.fetchall()
 
 
 @route('/insert/<rows>')
 def insert(rows):
+    """Insert/Bulk insert values into the table.
+
+    Parameter
+    --------
+    rows : str
+        A long string equal to the number of columns in the database
+        setup. Each column value is separated by a comma and or by
+        delineating each row with a bracket.
+    """
     # TODO Try to handle special characters that are difficult
     global no_cols
     if no_cols is None:
-        no_cols = len(get_first()[0])
+        no_cols = len(get_one()[0])
     rd = csv.DictReader(io.StringIO(rows))
     try:
         # TODO Figure out what errors could occur
@@ -97,6 +110,15 @@ def insert(rows):
 # Creates a new table
 @route('/init/<rows>')
 def init(rows):
+    """Initialize a new table with 'n' columns
+
+    Parameter
+    ---------
+    rows : string
+        The rows indicate the column names of the columns in the table.
+        Each of columns are separated by a comma to indicate that they
+        are to be takend as the name of the column in the table.
+    """
     global no_cols
     reader_list = csv.DictReader(io.StringIO(rows))
     header = reader_list.fieldnames
