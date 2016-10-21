@@ -13,6 +13,9 @@ from shutil import copyfile
 from bottle import response, route, run
 from bottle import jinja2_template as template
 
+# Custom tools
+import utils
+
 __appname__ = "AmoebaServer"
 __author__ = "Antoni Kaniowski"
 __version__ = "0.1"
@@ -66,30 +69,6 @@ def get_csv():
     return template('<pre>{{o}}</pre>', o=output.getvalue())
 
 
-# Create groups from data
-def grouper(n, iterable, fillVal=None):
-    args = [iter(iterable)] * n
-    return itertools.zip_longest(fillvalue=fillVal, *args)
-
-
-# Insert bulk rows
-def binsert(rows):
-    reg = re.compile('(?:[^,(]|\([^)]*\))*')
-    data = [item.rstrip(")").lstrip("(").split(", ")
-            for item in reg.findall(rows)]
-    dta = [tuple(item) for item in data if len(item) > 1]
-    # TODO Fix the import so that it is quite fast
-    # --
-    try:
-        # TODO FIXME execute many for multiple values for multiple columns
-        db.executemany("INSERT INTO t1 VALUES (?, ?)", dta)
-        db.commit()
-    except:
-        # TODO Try to catch the exception
-        raise
-    return "Successfully inserted %s" % rows
-
-
 def get_first():
     cursor = db.execute("SELECT * FROM t1 LIMIT 1")
     return cursor.fetchall()
@@ -97,33 +76,22 @@ def get_first():
 
 @route('/insert/<rows>')
 def insert(rows):
-    # TODO Fix both imports to reuse parts so that bulk and simple are same
+    # TODO Try to handle special characters that are difficult
     global no_cols
     if no_cols is None:
         no_cols = len(get_first()[0])
-    # --
     rd = csv.DictReader(io.StringIO(rows))
-    # --
-    dta = [item.rstrip(")").lstrip(" (") for item in rd.fieldnames]
-    data = list(grouper(no_cols, dta))
-    # --
-    fields = ("?, " * no_cols).rstrip(", ")
-    command = "INSERT INTO t1 VALUES (%s)" % fields
-    # --
-    db.executemany(command, data)
+    try:
+        # TODO Figure out what errors could occur
+        dta = [item.rstrip(")").lstrip(" (") for item in rd.fieldnames]
+        data = list(utils.grouper(no_cols, dta))
+        fields = ("?, " * no_cols).rstrip(", ")
+        command = "INSERT INTO t1 VALUES (%s)" % fields
+        db.executemany(command, data)
+    except:
+        raise
     db.commit()
     return "Successfully inserted %s" % rows
-#    if rows.startswith("("):
-#        binsert(rows)
-#        return binsert(rows)
-#    else:
-#        reader_list = csv.DictReader(io.StringIO(rows))
-#        header = reader_list.fieldnames
-#        h = ",".join("\'"+str(x)+"\'" for x in header)
-#        statement = 'INSERT INTO t1 VALUES({h})'.format(h=h)
-#        db.execute(statement)
-#        db.commit()
-#        return "Successfully inserted: \r" + statement
 
 
 # Creates a new table
