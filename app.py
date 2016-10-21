@@ -90,19 +90,29 @@ def binsert(rows):
     return "Successfully inserted %s" % rows
 
 
+def get_first():
+    cursor = db.execute("SELECT * FROM t1 LIMIT 1")
+    return cursor.fetchall()
+
+
 @route('/insert/<rows>')
 def insert(rows):
     # TODO Fix both imports to reuse parts so that bulk and simple are same
     global no_cols
     if no_cols is None:
-        no_cols = 2
+        no_cols = len(get_first()[0])
     # --
     rd = csv.DictReader(io.StringIO(rows))
-    input_length = len(rd.fieldnames)
-    if input_length > no_cols:
-        dta = [item.rstrip(")").lstrip(" (") for item in rd.fieldnames]
-        data = list(grouper(no_cols, dta))
-        print(data)
+    # --
+    dta = [item.rstrip(")").lstrip(" (") for item in rd.fieldnames]
+    data = list(grouper(no_cols, dta))
+    # --
+    fields = ("?, " * no_cols).rstrip(", ")
+    command = "INSERT INTO t1 VALUES (%s)" % fields
+    # --
+    db.executemany(command, data)
+    db.commit()
+    return "Successfully inserted %s" % rows
 #    if rows.startswith("("):
 #        binsert(rows)
 #        return binsert(rows)
