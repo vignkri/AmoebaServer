@@ -7,6 +7,7 @@ import re
 import io
 import csv
 import sqlite3
+import itertools
 from pathlib import Path
 from shutil import copyfile
 from bottle import response, route, run
@@ -18,7 +19,7 @@ __version__ = "0.1"
 __license__ = "wtfpl"
 
 # Store number of rows just to handle properly
-no_rows = None
+no_cols = None
 # Check if file exists, if not, bootstrap it from the sample
 db_file = Path("db.sqlite")
 if not db_file.is_file():
@@ -65,6 +66,12 @@ def get_csv():
     return template('<pre>{{o}}</pre>', o=output.getvalue())
 
 
+# Create groups from data
+def grouper(n, iterable, fillVal=None):
+    args = [iter(iterable)] * n
+    return itertools.zip_longest(fillvalue=fillVal, *args)
+
+
 # Insert bulk rows
 def binsert(rows):
     reg = re.compile('(?:[^,(]|\([^)]*\))*')
@@ -86,26 +93,36 @@ def binsert(rows):
 @route('/insert/<rows>')
 def insert(rows):
     # TODO Fix both imports to reuse parts so that bulk and simple are same
-    if rows.startswith("("):
-        binsert(rows)
-        return binsert(rows)
-    else:
-        reader_list = csv.DictReader(io.StringIO(rows))
-        header = reader_list.fieldnames
-        h = ",".join("\'"+str(x)+"\'" for x in header)
-        statement = 'INSERT INTO t1 VALUES({h})'.format(h=h)
-        db.execute(statement)
-        db.commit()
-        return "Successfully inserted: \r" + statement
+    global no_cols
+    if no_cols is None:
+        no_cols = 2
+    # --
+    rd = csv.DictReader(io.StringIO(rows))
+    input_length = len(rd.fieldnames)
+    if input_length > no_cols:
+        dta = [item.rstrip(")").lstrip(" (") for item in rd.fieldnames]
+        data = list(grouper(no_cols, dta))
+        print(data)
+#    if rows.startswith("("):
+#        binsert(rows)
+#        return binsert(rows)
+#    else:
+#        reader_list = csv.DictReader(io.StringIO(rows))
+#        header = reader_list.fieldnames
+#        h = ",".join("\'"+str(x)+"\'" for x in header)
+#        statement = 'INSERT INTO t1 VALUES({h})'.format(h=h)
+#        db.execute(statement)
+#        db.commit()
+#        return "Successfully inserted: \r" + statement
 
 
 # Creates a new table
 @route('/init/<rows>')
 def init(rows):
-    global no_rows
+    global no_cols
     reader_list = csv.DictReader(io.StringIO(rows))
     header = reader_list.fieldnames
-    no_rows = len(header)
+    no_cols = len(header)
     try:
         h = " varchar, ".join(str(x) for x in header)
         statement = 'CREATE TABLE t1 ({h} varchar)'.format(h=h)
