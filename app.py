@@ -2,16 +2,13 @@
 # -*- coding: utf-8 -*-
 """[application description here]"""
 
-
-import re
 import io
 import csv
 import sqlite3
-import itertools
 from pathlib import Path
 from shutil import copyfile
-from bottle import response, route, run
 from bottle import jinja2_template as template
+from bottle import response, route, run, request
 
 # Custom tools
 import utils
@@ -105,6 +102,22 @@ def insert(rows):
         raise
     db.commit()
     return "Successfully inserted %s" % rows
+
+
+# Define json post
+@route("/jin", method="POST")
+def jin():
+    global no_cols
+    if no_cols is None:
+        no_cols = len(get_one()[0])
+    data = request.json
+    dta = list(data.values())
+    fields = ("?, " * no_cols).rstrip(", ")
+    command = "INSERT INTO t1 VALUES (%s)" % fields
+    print(dta)
+    db.execute(command, dta)
+    db.commit()
+    print(data, dta)
 
 
 # Creates a new table
