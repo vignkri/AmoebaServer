@@ -16,8 +16,17 @@
   Initialize a new table (all columns are ``varchar``) 
   * ``/init/col_1,col_2,...``
 
-  Insert data:
-  * ``/insert/A_string,"12.2"...``
+  Single Insert
+  * Implicit: ``insert/col1, col2``
+  * For empty values: ``/insert/col1,None``
+
+  Bulk Insert
+  * Explicit:  ``/insert/(col1, col2),(col1, col2), (col1, col2),...``
+  * Implicit Bulk Insert: ``/insert/col1, col2, col1, col2, col1, col2,...``
+      * For 3 columns: ``/insert/col1, col2, col3, col1, col2, col3,...`` and so on for n columns.
+  * Empty columns should be clearly specified:
+      * ``/insert/col1,,col2,,col2,...``
+      * Or using: ``/insert/(col1,),(col1,col2),(,col2),...``
 
   View:
   * ``/``
