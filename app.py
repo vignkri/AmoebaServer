@@ -3,19 +3,18 @@
 """[application description here]"""
 
 
-import re
 import io
 import csv
 import sqlite3
-import itertools
 from pathlib import Path
 from shutil import copyfile
-from bottle import response, route, run
 from bottle import jinja2_template as template
+from bottle import Bottle, response, route, run
 
 # Custom tools
 import utils
 
+# -- Overview
 __appname__ = "AmoebaServer"
 __author__ = "Antoni Kaniowski"
 __version__ = "0.1"
@@ -30,9 +29,12 @@ if not db_file.is_file():
 
 db = sqlite3.connect("db.sqlite")
 
+# Create object for testing
+app = Bottle()
+
 
 # Renders the table
-@route('/')
+@app.route('/')
 def print_items():
     """Print the data in the database in a tabular form"""
     cursor = db.execute('SELECT * FROM t1')
@@ -44,7 +46,7 @@ def print_items():
 
 
 # Sends the sqlite file
-@route('/download')
+@app.route('/download')
 def get_sqlite():
     """Get the sqlite file and download it"""
     response.headers['Content-Disposition'] = \
@@ -57,7 +59,7 @@ def get_sqlite():
 
 
 # Sends the csv of the db
-@route('/csv')
+@app.route('/csv')
 def get_csv():
     """Get the csv file from the database"""
     cursor = db.execute('SELECT * FROM t1')
@@ -78,7 +80,7 @@ def get_one():
     return cursor.fetchall()
 
 
-@route('/insert/<rows>')
+@app.route('/insert/<rows>')
 def insert(rows):
     """Insert/Bulk insert values into the table.
 
@@ -108,7 +110,7 @@ def insert(rows):
 
 
 # Creates a new table
-@route('/init/<rows>')
+@app.route('/init/<rows>')
 def init(rows):
     """Initialize a new table with 'n' columns
 
