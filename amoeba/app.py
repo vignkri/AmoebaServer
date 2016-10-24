@@ -3,6 +3,7 @@
 """[application description here]"""
 
 
+import os
 import io
 import csv
 import sqlite3
@@ -12,7 +13,7 @@ from bottle import jinja2_template as template
 from bottle import Bottle, response, route, run
 
 # Custom tools
-import utils
+from . import utils
 
 # -- Overview
 __appname__ = "AmoebaServer"
@@ -23,11 +24,13 @@ __license__ = "wtfpl"
 # Store number of rows just to handle properly
 no_cols = None
 # Check if file exists, if not, bootstrap it from the sample
-db_file = Path("db.sqlite")
-if not db_file.is_file():
-    copyfile("db.sqlite.sample", "db.sqlite")
+db_file = os.getcwd() + "/db.sqlite"
+print(db_file)
+if not os.path.isfile(db_file):
+    copyfile(os.getcwd() + "/amoeba/db.sqlite.sample",
+             os.getcwd() + "/amoeba/db.sqlite")
 
-db = sqlite3.connect("db.sqlite")
+db = sqlite3.connect(os.getcwd() + "/amoeba/db.sqlite")
 
 # Create object for testing
 app = Bottle()
@@ -138,5 +141,3 @@ def init(rows):
         raise
 
     return "Ran: \r" + statement
-
-run(host='0.0.0.0', port=8888)
