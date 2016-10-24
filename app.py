@@ -105,17 +105,22 @@ def insert(rows):
 
 
 # Define json post
-@route("/jin", method="POST")
-def jin():
+@route("/post/json/", method="POST")
+def json_post():
+    """Insert single row using json post"""
     global no_cols
     if no_cols is None:
         no_cols = len(get_one()[0])
-    data = request.json
-    dta = list(data.values())
-    fields = ("?, " * no_cols).rstrip(", ")
-    command = "INSERT INTO t1 VALUES (%s)" % fields
-    print(dta)
-    db.execute(command, dta)
+    # --
+    try:
+        data = request.json
+        dta = list(data.values())
+        fields = ("?, " * no_cols).rstrip(", ")
+        command = "INSERT INTO t1 VALUES (%s)" % fields
+        db.execute(command, dta)
+    except:
+        raise
+    # --
     db.commit()
     print(data, dta)
 
